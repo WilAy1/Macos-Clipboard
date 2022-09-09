@@ -46,9 +46,10 @@ struct ContentView: View {
                 }
                     .padding(8)
                 Spacer()
-                Image(systemName: "gear")
+                Image(systemName: "rectangle.portrait.and.arrow.right")
                     .padding(.horizontal)
                     .onTapGesture {
+                        NSApplication.shared.terminate(nil)
                     }
             }
             .background(Color("555"))
