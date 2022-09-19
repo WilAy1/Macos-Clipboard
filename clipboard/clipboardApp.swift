@@ -50,7 +50,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         self.popover.behavior = .transient
         self.popover.contentViewController = NSHostingController(rootView: ContentView().environmentObject(vm))
         
-        
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { (t) in
                     if self.lastChangeCount != self.pasteboard.changeCount {
                         self.lastChangeCount = self.pasteboard.changeCount
@@ -67,11 +66,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         
         if let button = statusItems.button {
-            
             if popover.isShown {
                 self.popover.performClose(nil)
             } else {
-                self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
+                self.popover.show(relativeTo: button.visibleRect, of: button, preferredEdge: NSRectEdge.minY)
             }
             
         }
