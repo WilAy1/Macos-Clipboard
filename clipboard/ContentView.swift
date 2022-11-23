@@ -17,6 +17,7 @@ class ClipBoardViewModel : ObservableObject {
         
     }
     
+    
     func addData(s: String, type: Int){
         if let index = self.clipData.firstIndex(of: ClipboardData(text: s, type: 0)) {
             self.clipData.remove(at: index)
@@ -36,6 +37,8 @@ struct ClipboardData: Equatable {
 
 struct ContentView: View {
     @EnvironmentObject private var vm : ClipBoardViewModel
+    @State private var search = ""
+    @FocusState var isFocused : Bool
     var body: some View {
         VStack(alignment:.leading, spacing: 1) {
             HStack {
@@ -48,6 +51,17 @@ struct ContentView: View {
                 }
                     .padding(8)
                 Spacer()
+                TextField("search...", text: $search)
+                    .font(.system(size: 13.5))
+                    .foregroundColor(.white)
+                    .disableAutocorrection(true)
+                    .focusable()
+                    .focused($isFocused)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.accentColor.opacity(0.5), lineWidth: 4).opacity(isFocused ? 1 : 0).scaleEffect(isFocused ? 1 : 1.04))
+                    .animation(isFocused ? .easeIn(duration: 0.2) : .easeOut(duration: 0.0), value: isFocused)
+                    .onTapGesture {
+                        isFocused = true
+                    }
                 Text("CLEAR")
                     .font(.system(size: 13))
                     .fontWeight(.bold)
@@ -65,10 +79,19 @@ struct ContentView: View {
             ScrollView(.vertical, showsIndicators: false){
                 VStack {
                     if vm.clipData.count > 0 {
-                        ForEach(vm.clipData, id: \.text){
-                            data in
-                            eachCopiedItem(data: data)
-                                .environmentObject(vm)
+                        if !search.isEmpty {
+                            ForEach(vm.clipData.filter { $0.text.contains(search) }, id: \.text){
+                                data in
+                                eachCopiedItem(data: data)
+                                    .environmentObject(vm)
+                            }
+                        }
+                        else {
+                            ForEach(vm.clipData, id: \.text){
+                                data in
+                                eachCopiedItem(data: data)
+                                    .environmentObject(vm)
+                            }
                         }
                     }
                     else {
