@@ -18,20 +18,21 @@ class ClipBoardViewModel : ObservableObject {
     }
     
     
-    func addData(s: String, type: Int){
-        if let index = self.clipData.firstIndex(of: ClipboardData(text: s, type: 0)) {
+    func addData(s: String, type: Int, i: Data){
+        if let index = self.clipData.firstIndex(of: ClipboardData(text: s, type: type, image: i)) {
             self.clipData.remove(at: index)
         }
-        self.clipData.insert(ClipboardData(text: s, type: type), at: 0)
+        self.clipData.insert(ClipboardData(text: s, type: type, image: i), at: 0)
         self.did += 1
     }
     
     
 }
 
-struct ClipboardData: Equatable {
+struct ClipboardData: Equatable, Hashable {
     var text: String
     var type: Int
+    var image: Data
 }
 
 
@@ -87,7 +88,7 @@ struct ContentView: View {
                             }
                         }
                         else {
-                            ForEach(vm.clipData, id: \.text){
+                            ForEach(vm.clipData, id: \.self){
                                 data in
                                 eachCopiedItem(data: data)
                                     .environmentObject(vm)
@@ -145,7 +146,15 @@ struct eachCopiedItem: View {
                     .font(.system(size: 12))
             }
             else if data.type == 1 {
-                Text("")
+                if let nsimage = NSImage(data: data.image) {
+                    HStack {
+                        Image(nsImage: nsimage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: nsimage.size.width > 200 ? 200 : nsimage.size.width, height: nsimage.size.height > 200 ? 200 : nsimage.size.height)
+                        Spacer()
+                    }
+                }
             }
             Spacer()
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
@@ -153,7 +162,13 @@ struct eachCopiedItem: View {
                 .font(copied ? .system(size: 13) : .system(size: 11))
                 .onTapGesture {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(data.text, forType: .string)
+                    if data.type == 0 {
+                        NSPasteboard.general.setString(data.text, forType: .string)
+                    }
+                    else if data.type == 1 {
+                        let type = NSPasteboard.PasteboardType.tiff
+                        NSPasteboard.general.setData(data.image, forType: type)
+                    }
                     withAnimation {
                         copied = true
                         //data.active = true
@@ -168,7 +183,7 @@ struct eachCopiedItem: View {
                 .foregroundColor(/*data.active ? .green :*/ .white)
                 .font(.system(size: 11))
                 .onTapGesture {
-                    if let index = vm.clipData.firstIndex(of: ClipboardData(text: data.text, type: data.type)) {
+                    if let index = vm.clipData.firstIndex(of: ClipboardData(text: data.text, type: data.type, image: data.image)) {
                         vm.clipData.remove(at: index)
                     }
                     
